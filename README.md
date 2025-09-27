@@ -1,8 +1,8 @@
-# spw-shadownet
+# SPW-ShadowNet
 
-SPW-ShadowNet: A Soft Prior-Guided Wavelet Attention Network for Shadow Removal
+SPW-ShadowNet: A Soft Prior-Guided Wavelet Attention Network for End-to-End Shadow Removal
 
-This repository contains the overview and experimental results for the paper **"SPW-ShadowNet: A Soft Prior-Guided Wavelet Attention Network for Shadow Removal"**, which is currently under review.
+This repository contains the overview and experimental results for the paper **"SPW-ShadowNet: A Soft Prior-Guided Wavelet Attention Network for End-to-End Shadow Removal"**, which is currently under review.
 
 > **Note on Code Availability**: The source code will be made publicly available immediately upon the paper's acceptance. Thank you for your interest and patience!
 > 
