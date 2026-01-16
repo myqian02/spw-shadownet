@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 import numpy as np
 import imageio.v2 as imageio
-# import imageio
 import util
 import pandas as pd
 import cv2
@@ -21,16 +20,8 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--seed', default=0, type=int)
 parser.add_argument('--save_dir', default='tttt/', type=str)
-# parser.add_argument('--save_dir', default='./experiment_100_0.10_2025-08-29_noIgbn_istd+', type=str)
-# parser.add_argument('--test_data', default='../../LOL_V2/Real_captured/Test', type=str)
-# parser.add_argument('--test_data', default='tttt/', type=str)
-# parser.add_argument('--test_data', default='/home/myq/projects/ShadowFormer-main/data/dataset/ISTD/test', type=str)
-# parser.add_argument('--test_data', default='/home/myq/projects/dataset/LRSS/test/', type=str, help='path of test data')
 parser.add_argument('--test_data', default='/home/myq/projects/dataset/ISTD+/test/', type=str, help='path of test data')
-# parser.add_argument('--test_data', default='/home/myq/projects/code/tttt/', type=str, help='path of test data')
-# parser.add_argument('--dataset_name', default='LOL_V2', type=str)/home/myq/projects/code/tttt
 parser.add_argument('--model_path', default='experiment_100_0.10_2025-08-29_noIgbn_istd+_best/models/model_best.pth', type=str)
-# parser.add_argument('--model_path', default='experiment_100_0.10_2025-09-17_noIgb_istd+/models/model_best.pth', type=str)
 parser.add_argument('--dataset_name', default='ISTD', type=str)
 parser.add_argument('--n_colors', default=3, type=int)
 parser.add_argument('--save_results', default=False, type=bool)
@@ -38,11 +29,9 @@ parser.add_argument('--w1', default=10, type=float)
 parser.add_argument('--w2', default=0.1, type=float)
 parser.add_argument('--gpus', default='1', type=str, help='CUDA_VISIBLE_DEVICES')
 
-
 def makedir(path):
     if not os.path.exists(path):
         os.makedirs(path, exist_ok=True)
-
 
 def pad_tensor(input):
     height_org, width_org = input.shape[2], input.shape[3]
@@ -109,21 +98,11 @@ if __name__ == '__main__':
     # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
-    # args.save_dir = ('%s_%d_%.2f') % (args.save_dir, args.w1 * 10, args.w2)
-
-    # model_path = os.path.join(args.save_dir, 'models')
     shadow_path = os.path.join(args.test_data, 'test_A')
     gt_path = os.path.join(args.test_data, 'test_C')
-    # shadow_illumination_path = os.path.join(args.test_data, 'test_C')
 
     cuda = torch.cuda.is_available()
     lpips_model = lpips.LPIPS(net="alex").cuda()
-
-    # makedir(model_path)
-
-    # model_list = os.listdir(model_path)
-    # model_list.sort()
-    # model_list = model_list[62:]
 
     ############### prepare train data ###############
     data_time = time.time()
@@ -138,28 +117,12 @@ if __name__ == '__main__':
     print('Reading images to memory..........')
 
     ###############################################################
-
-    # all_intensity_psnrs = []
-    # all_intensity_ssims = []
-    # all_intensity_lpips = []
     all_model = []
 
-    # for model_name in model_list:
-    #     begin_time = time.time()
-    #     # print(model_name)
-    #     if model_name != 'model_500.pth':
-    #         continue
-    # model = torch.load(os.path.join(args.model_path, model_name))
     model = torch.load(args.model_path)
     count_params(model)
-    # input = torch.randn(1, 3, 224, 224).cuda()
-    # flops, params = profile(model, inputs=(input,))
-    # print(f"FLOPs: {flops / 1e9:.2f} G")
-    # print(f"参数量: {params / 1e6:.2f} M")
 
     print(model.__class__)          # 输出模型类名
-    # print(model)
-    # print(model.__class__.__module__)  # 输出类所在的模块名
     model.eval()
     if cuda:
         begin_time = time.time()
