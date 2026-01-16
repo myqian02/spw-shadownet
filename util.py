@@ -45,17 +45,6 @@ def calculate_rmse(img1, img2, border=0):
         return float('inf')
     return math.sqrt(mse)
 
-# def compute_rmse(preds, targets):
-#     # 确保输入为同形状的Tensor
-#     assert preds.shape == targets.shape, "Shape mismatch between predictions and targets"
-    
-#     # 计算均方误差 (MSE)
-#     mse = torch.mean((preds - targets) ** 2)
-    
-#     # 计算均方根误差 (RMSE)
-#     rmse = torch.sqrt(mse)
-#     return rmse
-
 def calculate_psnr(img1, img2, border=0):
     # img1 and img2 have range [0, 255]
     #img1 = img1.squeeze()
