@@ -69,7 +69,6 @@ def pad_tensor(input):
 
     return input, pad_left, pad_right, pad_top, pad_bottom
 
-
 def pad_tensor_back(input, pad_left, pad_right, pad_top, pad_bottom):
     height, width = input.shape[2], input.shape[3]
     return input[:, :, pad_top: height - pad_bottom, pad_left: width - pad_right]
@@ -93,7 +92,6 @@ if __name__ == '__main__':
     ]
 
     args = parser.parse_args()
-    # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
     shadow_path = os.path.join(args.test_data, 'test_A')
@@ -123,14 +121,10 @@ if __name__ == '__main__':
     print(model.__class__)        
     model.eval()
     if cuda:
-        begin_time = time.time()
         model = model.cuda()
         intensity_psnrs = []
         intensity_ssims = []
         intensity_lpips = []
-        intensity_rmses = []
-        intensity_niqes = []
-        total_time = []
 
         with torch.no_grad():
             for img_name in tqdm(image_names):
@@ -142,20 +136,17 @@ if __name__ == '__main__':
                 shadow_input, pad_left, pad_right, pad_top, pad_bottom = pad_tensor(shadow_input)
                 if cuda:
                     shadow_input = shadow_input.cuda()
-                pred_img, _ = model(shadow_input)
+                pred_img = model(shadow_input)
                 pred_img = pad_tensor_back(pred_img, pad_left, pad_right, pad_top, pad_bottom)
-
                 gt_tensor = util.single2tensor4(gt_image/255).cuda()
+                
                 intensity_lpip = lpips_model(pred_img, gt_tensor)
                 pred_img = util.tensor2single(pred_img)
-
                 torch.cuda.synchronize()
 
                 pred_img = util.single2uint(pred_img)
                 intensity_psnr = util.calculate_psnr(pred_img, gt_image)
                 intensity_ssim = util.calculate_ssim(pred_img, gt_image)
-                intensity_rmse = util.calculate_rmse(pred_img, gt_image)
-                intensity_niqe = util.calculate_niqe(gt_image)
 
                 if args.save_results:
                     result_path = os.path.join(args.save_dir, 'results', args.dataset_name, args.model_path[-14:])
@@ -164,12 +155,5 @@ if __name__ == '__main__':
 
         print('Intensity PSNR: %04f' % (np.mean(intensity_psnrs)))
         print('Intensity SSIM: %04f' % (np.mean(intensity_ssims)))
-        print('Intensity RMSE: %04f' % (np.mean(intensity_rmses)))
         print('Intensity LPIPS: %04f' % (sum(intensity_lpips)/len(image_names)))
-        print('Intensity NIQES: %04f' % (sum(intensity_niqes)/len(image_names)))
-        print('Everage Time Per Image: %04f' % (np.mean(total_time)))
-        print('Frames Per Second: %04f' % (1/np.mean(total_time)))
         print('Image Counts: %04d' % (len(intensity_psnrs)))
-
-
-
