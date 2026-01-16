@@ -10,8 +10,7 @@ import util
 from torch.optim.lr_scheduler import MultiStepLR, StepLR, CosineAnnealingLR
 from torchvision.utils import save_image
 from data import TrainData
-# from model_noIgb_nosm_ori import shemove
-from model_noIgb2 import shemove
+from model import shemove
 from losses import SSIM, MS_SSIM, TVLoss
 import matplotlib.pyplot as plt
 
@@ -89,7 +88,6 @@ def findLastCheckpoint(save_dir):
     else:
         initial_epoch = 0
     return initial_epoch
-
 
 def count_params(model):
     count = 0
