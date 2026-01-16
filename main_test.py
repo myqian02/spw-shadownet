@@ -13,15 +13,13 @@ from tqdm import tqdm
 import torchvision.models as models
 from thop import profile, clever_format
 
-# os.environ['CUDA_VISIBLE_DEVICES'] = '3'
-
 # Params
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--seed', default=0, type=int)
 parser.add_argument('--save_dir', default='tttt/', type=str)
 parser.add_argument('--test_data', default='/home/myq/projects/dataset/ISTD+/test/', type=str, help='path of test data')
-parser.add_argument('--model_path', default='experiment_100_0.10_2025-08-29_noIgbn_istd+_best/models/model_best.pth', type=str)
+parser.add_argument('--model_path', default='experiment_istd+/models/model_best.pth', type=str)
 parser.add_argument('--dataset_name', default='ISTD', type=str)
 parser.add_argument('--n_colors', default=3, type=int)
 parser.add_argument('--save_results', default=False, type=bool)
@@ -122,7 +120,7 @@ if __name__ == '__main__':
     model = torch.load(args.model_path)
     count_params(model)
 
-    print(model.__class__)          # 输出模型类名
+    print(model.__class__)        
     model.eval()
     if cuda:
         begin_time = time.time()
@@ -171,7 +169,6 @@ if __name__ == '__main__':
         print('Intensity NIQES: %04f' % (sum(intensity_niqes)/len(image_names)))
         print('Everage Time Per Image: %04f' % (np.mean(total_time)))
         print('Frames Per Second: %04f' % (1/np.mean(total_time)))
-        print('Elapsed Time: %04f' % (time.time() - begin_time))
         print('Image Counts: %04d' % (len(intensity_psnrs)))
 
 
