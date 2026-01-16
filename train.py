@@ -30,19 +30,8 @@ parser.add_argument('--w2', default=0.1, type=float)
 
 # Data
 parser.add_argument('--batch_size', default=8, type=int, help='batch size')
-# parser.add_argument('--train_data', default='../../LOL_V2', type=str, help='path of train data')
-# parser.add_argument('--dataset', default='LowLight', type=str, help='dataset name')
 parser.add_argument('--train_data', default='/home/myq/projects/dataset/ISTD+/', type=str, help='path of train data')
 parser.add_argument('--test_data', default='/home/myq/projects/dataset/ISTD+/test/', type=str, help='path of test data')
-# parser.add_argument('--train_data', default='/home/myq/projects/ShadowFormer-main/data/dataset/ISTD', type=str, help='path of train data')
-# parser.add_argument('--test_data', default='/home/myq/projects/ShadowFormer-main/data/dataset/ISTD/test/', type=str, help='path of test data')
-# parser.add_argument('--train_data', default='/home/myq/projects/code/dataset/UAV-SC_refine', type=str, help='path of train data')
-# parser.add_argument('--test_data', default='/home/myq/projects/code/dataset/UAV-SC_refine/test', type=str, help='path of test data')
-# parser.add_argument('--train_data', default='/home/myq/projects/code/dataset/WSRD+/', type=str, help='path of train data')
-# parser.add_argument('--test_data', default='/home/myq/projects/code/dataset/WSRD+/test/', type=str, help='path of test data')
-# parser.add_argument('--pre_trained', default='./experiment_100_0.10_2024-12-09/models/model_300.pth', type=str, help='path of pre-trained model')
-# parser.add_argument('--pre_trained', default='experiment_100_0.10_2025-08-08_noIgb_srd/models/model_best.pth', type=str, help='path of pre-trained model')
-# parser.add_argument('--pre_trained', default='experiment_100_0.10_2025-08-18_noIgb_istd/models/model_best.pth', type=str, help='path of pre-trained model')
 parser.add_argument('--pre_trained', default=None, type=str, help='path of pre-trained model')
 parser.add_argument('--dataset', default='ISTD', type=str, help='dataset name')
 parser.add_argument('--n_colors', default=3, type=int)
@@ -53,22 +42,15 @@ parser.add_argument('--gpus', default='2', type=str, help='CUDA_VISIBLE_DEVICES'
 parser.add_argument('--datas', default='istd+', type=str, help='dataset')
 
 # Optim
-# parser.add_argument('--lr', default=0.0004, type=float, help='initial learning rate for Adam')
 parser.add_argument('--lr', default=0.00025, type=float, help='initial learning rate for AdamW')
-# parser.add_argument('--lr', default=0.0001, type=float, help='initial learning rate for Adam')
-# parser.add_argument('--lr', default=0.0001, type=float, help='initial learning rate for Adam')
 parser.add_argument('--weight_decay', default=0.02, type=float)
-# parser.add_argument('--weight_decay', default=1e-6, type=float)
 parser.add_argument('--clip_grad_norm', default=2.5, type=float)
-# parser.add_argument('--clip_grad_norm', default=2.5, type=float)
-
 
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
 cuda = torch.cuda.is_available()
 current_date = datetime.datetime.now().strftime("%Y-%m-%d")
-# args.save_dir = ('%s_%d_%.2f_%s_4')%(args.save_dir, args.w1*10, args.w2, current_date)
 args.save_dir = ('%s_%d_%.2f_%s_noIgb_%s')%(args.save_dir, args.w1*10, args.w2, current_date, args.datas)
 model_save_dir = os.path.join(args.save_dir, 'models')
 optim_save_dir = os.path.join(args.save_dir, 'optim')
@@ -91,17 +73,13 @@ for root, _, fnames in sorted(os.walk(gt_path)):
 image_names.sort()
 
 print('Finding {} test data file path'.format(len(image_names)))
-# print("Model Name: model_noIgb.py")
-
 
 def makedir(path):
     if not os.path.exists(path):
         os.makedirs(path, exist_ok=True)
 
-
 def findLastCheckpoint(save_dir):
     file_list = glob.glob(os.path.join(model_save_dir, 'model_*.pth'))
-    # print(file_list)
     if file_list:
         epochs_exist = []
         for file_ in file_list:
@@ -124,22 +102,13 @@ def count_params(model):
     print('Total parameters: %d' % count)
 
 def compute_reflectance(image, illumination, epsilon=1e-6):
-
-    # Ensure tensors are on CUDA
     if not image.is_cuda or not illumination.is_cuda:
         raise ValueError("Both image and illumination must be on CUDA.")
-
-    # Compute reflectance with stabilization
-    reflectance = image / (illumination + epsilon)
-    
-    # Clip the reflectance to ensure it stays in a valid range (e.g., [0, 1] for normalized images)
     reflectance = torch.clamp(reflectance, min=0, max=1)
     
     return reflectance
 
 def compute_illumination(x, epsilon=1e-6):
-
-    # Ensure tensors are on CUDA
     if not x.is_cuda:
         raise ValueError("Both image and illumination must be on CUDA.")
     
@@ -201,10 +170,8 @@ class PerceptualLoss(torch.nn.Module):
             param.requires_grad = False
 
     def forward(self, output, target):
-        # 提取特征
         output_features = self.vgg(output)
         target_features = self.vgg(target)
-        # 计算特征之间的差异
         # loss = F.mse_loss(output_features, target_features)
         loss = torch.nn.functional.mse_loss(output_features, target_features)
         return loss
@@ -218,7 +185,6 @@ if __name__ == '__main__':
 
     print('===> Building model')
     model = shemove(n_colors=args.n_colors, n_feats=args.n_feats)
-    # print(model)
     count_params(model)
 
     ###############################################################
@@ -226,17 +192,15 @@ if __name__ == '__main__':
     if args.restart:
         initial_epoch = 0
     else:
-    # if initial_epoch > 0:
         initial_epoch = findLastCheckpoint(save_dir=model_save_dir)  # load the last model in matconvnet style
         print('resuming by loading epoch %03d' % initial_epoch)
-        # model.load_state_dict(torch.load(os.path.join(save_dir, 'model_%03d.pth' % initial_epoch)))
         model = torch.load(os.path.join(model_save_dir, 'model_%03d.pth' % initial_epoch))
     print("The initial epoch is :", initial_epoch)
     if args.pre_trained != None:
         model = torch.load(args.pre_trained)
 
     model.train()
-    print("Model Name:", model.__class__)          # 输出模型类名
+    print("Model Name:", model.__class__) 
 
     criterion = nn.MSELoss()
     criterion_ssim_E = MS_SSIM(data_range=1, channel=3)
@@ -251,12 +215,9 @@ if __name__ == '__main__':
         criterion_grad = criterion_grad.cuda()
 
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-    # scheduler = StepLR(optimizer, step_size=100, gamma=0.5) 
     scheduler = CosineAnnealingLR(optimizer, T_max=args.epoch, eta_min=1e-7)
     TrainLoader = TrainData(args).get_loader()
     perceptual_loss = PerceptualLoss().cuda()
-
-    # import pdb; pdb.set_trace()
     
     lrd = args.lr / ((args.epoch*1//2))
     global_psnr = 0.0
@@ -269,18 +230,7 @@ if __name__ == '__main__':
     lr_list = []
     lr_epoch = args.lr
     lr_end = 1e-8
-    # training_psnrs = []
-    # training_ssims = []
-    # for epoch in range(initial_epoch, args.epoch):
     for epoch in range(initial_epoch, args.epoch):
-        # if epoch > args.epoch//2:
-        # # if epoch > 0:
-        #     lr = args.lr - lrd * (epoch-args.epoch//2)
-        #     # lr = args.lr * (lr_end / args.lr) ** (0.372 * epoch / args.epoch)
-        #     # lr = args.lr * (lr_end / args.lr) ** (0.372 * (epoch-40) / args.epoch)
-        #     lr_epoch = lr
-        #     for param_group in optimizer.param_groups:
-        #         param_group['lr'] = lr
         lr_epoch = optimizer.param_groups[0]['lr']
         lr_list.append(lr_epoch)
         time_begin = time.time()
@@ -302,33 +252,6 @@ if __name__ == '__main__':
             if args.save_train:
                 training_path = os.path.join(training_save_dir,  img_name[0][:-4] + "_output.png")
                 save_image(pred_img, training_path, nrow=args.batch_size//2)
-
-            '''# import pdb; pdb.set_trace()
-            intensity_l2_loss = criterion(pred_img, gt)
-            # intensity_ssim_loss = 1 - criterion_ssim_E(pred_img, gt)
-            intensity_ssim_loss = - criterion_ssim_E(pred_img, gt)
-            intensity_I_loss = criterion(compute_illumination(pred_img), compute_illumination(gt)) 
-            # intensity_grad_loss = criterion_grad(pred_img, gt)
-            # intensity_loss = 1.0 * intensity_ssim_loss + 1.0 * intensity_grad_loss + 1.0 * intensity_l2_loss 
-            intensity_loss = 1.0 * intensity_ssim_loss + 1.0 * intensity_l2_loss + 2.0 * intensity_I_loss
-
-            perception_loss = perceptual_loss(pred_img, gt)
-            # total_loss = 1.5 * intensity_loss + 0.5 * perception_loss
-            # total_loss = 1.75 * intensity_loss + 0.35 * perception_loss
-            # total_loss = 2.0 * intensity_loss
-            # total_loss = 1.5 * intensity_loss + 1.25 * perception_loss
-            total_loss = 1.5 * intensity_loss + 0.75 * perception_loss
-            '''
-            intensity_l2_loss = criterion(pred_img, gt) * 10
-            intensity_ssim_loss = 1 - criterion_ssim_E(pred_img, gt)
-            # intensity_I_loss = criterion(compute_illumination(pred_img), compute_illumination(gt)) 
-            # intensity_I_loss = criterion(compute_illumination(pred_img), compute_illumination(gt)) * 2.0
-            intensity_loss = 1.0 * intensity_ssim_loss + 1.0 * intensity_l2_loss
-            # intensity_loss = 1.0 * intensity_ssim_loss + 1.0 * intensity_l2_loss + 2.0 * intensity_I_loss
-
-            perception_loss = perceptual_loss(pred_img, gt) * 0.80
-            total_loss = 1.0 * intensity_loss + 1.0 * perception_loss
-            # total_loss = 1.0 * intensity_loss'''
             
             epoch_total_loss += total_loss.item()
             epoch_intensity_loss += intensity_loss.item()
@@ -341,8 +264,6 @@ if __name__ == '__main__':
         elapsed_time = time.time() - start_time
         log('epoch = %4d , total_loss = %.6f , time = %4.2f s, w1=%d, w2=%.2f' % (epoch + 1, epoch_total_loss, elapsed_time, args.w1*10, args.w2))
         log('learning_rate = %.4f, intensity_loss = %.4f , perception_loss = %.4f' % (optimizer.param_groups[0]['lr'], epoch_intensity_loss, epoch_perceptual_loss))
-        # log('l2_loss = %.4f , grad_loss = %.4f , ssim_loss = %.4f, perception_loss = %.4f' % (intensity_l2_loss, intensity_grad_loss, intensity_ssim_loss, perception_loss*0.2))
-        # log('l2_loss = %.4f , ssim_loss = %.4f, perception_loss = %.4f' % (intensity_l2_loss, intensity_ssim_loss, perception_loss*0.2))
 
         model.eval()
 
@@ -358,7 +279,6 @@ if __name__ == '__main__':
 
                 shadow_input = util.single2tensor4(shadow_image)
                 shadow_input, pad_left, pad_right, pad_top, pad_bottom = pad_tensor(shadow_input, args.divide)
-                # print(pad_left, pad_right, pad_top, pad_bottom)
                 shadow_input = shadow_input.cuda()
 
                 pred_img = model(shadow_input)
@@ -382,33 +302,7 @@ if __name__ == '__main__':
         ssim_list.append(eval_ssim)
         rmse_list.append(eval_rmse)
         log('Current Test Results: PSNR: %04f , SSIM: %04f' % (eval_psnr, eval_ssim))
-         # 绘制 PSNR 曲线
-        plt.subplot(3, 1, 1)
-        plt.plot(psnr_list, label='PSNR', color='green')
-        plt.title('PSNR over Epochs')
-        plt.xlabel('Epoch'), plt.ylabel('PSNR (dB)'), plt.legend()
-        plt.grid(True)
-
-        # 绘制 SSIM 曲线
-        plt.subplot(3, 1, 2)
-        plt.plot(ssim_list, label='SSIM', color='blue')
-        plt.title('SSIM over Epochs')
-        plt.xlabel('Epoch'), plt.ylabel('SSIM'), plt.legend()
-        plt.grid(True)
         
-        
-        # 绘制学习率曲线
-        plt.subplot(3, 1, 3)
-        plt.plot(lr_list, label='Learning Rate', color='purple')
-        plt.title('Learning Rate Schedule')
-        plt.xlabel('Epoch'), plt.ylabel('LR'), plt.legend()
-        plt.grid(True)
-        
-        plt.tight_layout()
-        plt.savefig(metric_save_dir + "metric.jpg")
-        plt.close()
-
-        # if eval_ssim > global_ssim:
         if eval_psnr > global_psnr:
             global_psnr = eval_psnr
             global_ssim = eval_ssim
